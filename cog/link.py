@@ -31,6 +31,7 @@ class Link(commands.Cog):
                     embed.add_field(name="author", value=message.author.mention, inline=False)
                     embed.add_field(name="channel", value=message.channel.mention, inline=False)
                     embed.add_field(name="date", value=message.created_at.isoformat(), inline=False)
+                    embed.add_field(name="jump", value=f"[jump]({message.jump_url})", inline=False)
                     await channel.send(url[0])
                     await channel.send(embed=embed)
             else:
