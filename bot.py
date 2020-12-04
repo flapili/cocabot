@@ -6,14 +6,21 @@ import os
 import discord
 from discord.ext import commands
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="'%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s'",
+)
+
 logger = logging.getLogger(__file__)
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or(("?")), intents=discord.Intents.all())
+bot = commands.Bot(
+    command_prefix=commands.when_mentioned_or(("?")), intents=discord.Intents.all()
+)
 
 
 @bot.event
 async def on_ready():
-    print("The bot is ready")
+    logger.info("The bot is ready")
 
 
 for file in Path(__file__).parent.glob("cog/*.py"):
@@ -22,10 +29,10 @@ for file in Path(__file__).parent.glob("cog/*.py"):
         try:
             bot.load_extension(extension)
         except Exception:
-            print(f"Error while loading extension {extension}")
-            print(traceback.format_exc())
+            logger.error(f"Error while loading extension {extension}")
+            logger.error(traceback.format_exc())
         else:
-            print(f"Loaded : {extension}")
-            pass
+            logger.info(f"Loaded {extension}")
+
 
 bot.run(os.environ["TOKEN"])
