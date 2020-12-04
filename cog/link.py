@@ -24,11 +24,6 @@ class Link(commands.Cog):
             548982055782973461,  # astuce
         )
         if message.channel.id in allowed_channels_id:
-            # print(message)
-
-            # regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"  # noqa: E501
-            # for url in re.findall(regex, message.content):
-
             channel = self.bot.get_channel(742516338857213995)  # liens stylés
             if channel is not None:
                 for url in regex.url_pattern.findall(message.content):
