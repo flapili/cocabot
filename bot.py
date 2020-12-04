@@ -2,14 +2,30 @@ import traceback
 from pathlib import Path
 import logging
 import os
+import sys
 
 import discord
 from discord.ext import commands
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="'%(asctime)s :: %(levelname)s :: %(name)s :: %(message)s'",
-)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter(fmt="[%(asctime)s] %(filename)s:%(lineno)d :: %(levelname)s :: %(name)s :: %(message)s")
+
+# set stdout handler
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.INFO)
+stdout_handler.setFormatter(formatter)
+root_logger.addHandler(stdout_handler)
+
+
+# set stderr handler
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.ERROR)
+stderr_handler.setFormatter(formatter)
+root_logger.addHandler(stderr_handler)
+
 
 logger = logging.getLogger(__file__)
 
