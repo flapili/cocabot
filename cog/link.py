@@ -25,17 +25,16 @@ class Link(commands.Cog):
         )
         if message.channel.id in allowed_channels_id:
             channel = self.bot.get_channel(742516338857213995)  # liens stylés
-            if channel is not None:
-                for url in regex.url_pattern.findall(message.content):
-                    embed = discord.Embed(description=message.content, url=url[0])
-                    embed.add_field(name="author", value=message.author.mention, inline=False)
-                    embed.add_field(name="channel", value=message.channel.mention, inline=False)
-                    embed.add_field(name="date", value=message.created_at.isoformat(), inline=False)
-                    embed.add_field(name="jump", value=f"[jump]({message.jump_url})", inline=False)
-                    await channel.send(url[0])
-                    await channel.send(embed=embed)
-            else:
-                logger.critical("channel 'Liens Stylés' not found !")
+            if channel is None:
+                logger.error("channel 'Liens Stylés' not found !")
+                return
+
+            if regex.url_regex.findall(message.content):
+                embed = discord.Embed()
+                embed.add_field(name="author", value=message.author.mention, inline=False)
+                embed.add_field(name="jump", value=f"[jump]({message.jump_url})", inline=False)
+                await channel.send(message.content)
+                await channel.send(embed=embed)
 
 
 def setup(bot):
