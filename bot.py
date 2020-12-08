@@ -30,7 +30,7 @@ root_logger.addHandler(stderr_handler)
 logger = logging.getLogger(__file__)
 
 bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or(("?")), intents=discord.Intents.all()
+    command_prefix=commands.when_mentioned_or("?"), intents=discord.Intents.all()
 )
 
 
