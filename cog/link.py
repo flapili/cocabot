@@ -27,7 +27,12 @@ class Link(commands.Cog):
             548982055782973461,  # astuce
         )
 
-        rejected_website = ("tenor.com",)
+        rejected_website = (
+            "tenor.com",
+            "discord.com/channels",
+            "canary.discord.com/channels",
+            )
+
         rejected_url = tuple(
             f"{scheme}://{link}"
             for link, scheme in itertools.product(rejected_website, ("http", "https"))
