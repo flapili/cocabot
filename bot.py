@@ -1,3 +1,4 @@
+# coding: utf-8
 import traceback
 from pathlib import Path
 import logging
@@ -7,11 +8,14 @@ import sys
 import discord
 from discord.ext import commands
 
+from utils.my_bot import MyBot
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter(fmt="[%(asctime)s] %(filename)s:%(lineno)d :: %(levelname)s :: %(name)s :: %(message)s")
+formatter = logging.Formatter(
+    fmt="%(asctime)s %(filename)s:%(lineno)d :: %(levelname)s :: %(name)s :: %(message)s"
+)
 
 # set stdout handler
 stdout_handler = logging.StreamHandler(sys.stdout)
@@ -29,7 +33,7 @@ root_logger.addHandler(stderr_handler)
 
 logger = logging.getLogger(__file__)
 
-bot = commands.Bot(
+bot = MyBot(
     command_prefix=commands.when_mentioned_or("?"), intents=discord.Intents.all()
 )
 
