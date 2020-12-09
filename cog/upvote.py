@@ -35,8 +35,8 @@ class UpVote(commands.Cog):
                     users = await reaction.users().flatten()
                     if (
                         reaction.count >= 3
-                        or discord.utils.get(users, id=269332971587239938)
-                    ) and not discord.utils.get(users, id=783771075636756510):
+                        or discord.utils.get(users, id=269332971587239938)  # cocadmin
+                    ) and not discord.utils.get(users, id=783771075636756510):  # cocabot
 
                         liens_stylles_channel = self.bot.get_channel(742516338857213995)
 
