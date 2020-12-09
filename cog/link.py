@@ -1,3 +1,4 @@
+# coding: utf-8
 import logging
 import ssl
 import itertools
@@ -45,7 +46,6 @@ class Link(commands.Cog):
                 return
 
             for url in regex.url_regex.findall(message.content):
-                print(url[0])
                 if url[0].startswith(rejected_url):
                     continue
 
