@@ -58,7 +58,6 @@ class Stats(commands.Cog):
         """
         Retourne le message avec le plus de réactions.
         - [channel] : le channel où rechercher le message (tous les channels de la guilde si aucun précisé).
-        - [emoji] : l'émoji à rechercher (tous cummulés si aucun précisé).
         - [after] : recherche parmi les messages qui ont été envoyés après cette date.
         - [before] : cherche parmi les messages qui ont été envoyés avant cette date.
         """
@@ -148,6 +147,7 @@ class Stats(commands.Cog):
         Retourne les nombres de messages par jours.
         - [member] : l'auteur des messages (tous les membres de la guilde si aucun précisé).
         - [channel] : le channel où rechercher le message (tous les channels de la guilde si aucun précisé).
+        - [cumul] : true/false.
         - [after] : recherche parmi les messages qui ont été envoyés après cette date.
         - [before] : cherche parmi les messages qui ont été envoyés avant cette date.
         """
