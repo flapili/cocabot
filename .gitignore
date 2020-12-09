@@ -131,3 +131,4 @@ dmypy.json
 
 .vscode
 ecosystem.config.js
+data.db
