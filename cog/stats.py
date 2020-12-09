@@ -52,8 +52,8 @@ class Stats(commands.Cog):
         self,
         ctx,
         channel: typing.Optional[discord.TextChannel] = None,
-        after: converter.dateparse = datetime.datetime(2015, 1, 1),
-        before: converter.dateparse = datetime.datetime.utcnow(),
+        after: converter.dateparse = datetime.datetime.min,
+        before: converter.dateparse = datetime.datetime.max,
     ):
         """
         Retourne le message avec le plus de réactions.
@@ -141,8 +141,8 @@ class Stats(commands.Cog):
         member: typing.Optional[discord.Member] = None,
         channel: typing.Optional[discord.TextChannel] = None,
         cumul: typing.Optional[bool] = True,
-        after: converter.dateparse = datetime.datetime(2015, 1, 1),
-        before: converter.dateparse = datetime.datetime.utcnow(),
+        after: converter.dateparse = datetime.datetime.min,
+        before: converter.dateparse = datetime.datetime.max,
     ):
         """
         Retourne les nombres de messages par jours.
