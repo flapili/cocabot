@@ -4,7 +4,7 @@ import dateparser as dp
 
 def dateparse(argument):
     result = dp.parse(argument)
-    if result:
+    if result is not None:
         return result
     else:
         raise ValueError(f"{argument} does not match with any format.")
