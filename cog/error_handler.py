@@ -56,8 +56,8 @@ class ErrorHandler(commands.Cog):
                 cd = [f"{time} {unit}" for time, unit in units if time]
                 cd = (", ".join(cd[:-1]) + " et " + cd[-1]) if len(cd) > 1 else cd[0]
                 await ctx.send(
-                    f"{ctx.author.mention} la commande\
-                     `{ctx.command.qualified_name}` est en cooldown, merci d'attendre {cd}"
+                    f"{ctx.author.mention} la commande `{ctx.command.qualified_name}`"
+                    f" est en cooldown, merci d'attendre {cd}"
                 )
             return
 
@@ -66,14 +66,15 @@ class ErrorHandler(commands.Cog):
             await ctx.send_help(ctx.command)
             return
 
-        if isinstance(error, commands.errors.BadArgument):
-            await ctx.send(error)
+        if isinstance(error, commands.errors.ConversionError):
+            # TODO await ctx.send(f"impossible de convertir : {error.param.name}")
+            await ctx.send_help(ctx.command)
             return
 
         if isinstance(error, commands.errors.DisabledCommand):
             await ctx.send(
-                f"la commande `{ctx.prefix}{ctx.command}` est désactivée pour la raison suivante :\
-                 {getattr(ctx.command, '__original_kwargs__').get('reason', None)}"
+                f"la commande `{ctx.prefix}{ctx.command}` est désactivée pour la raison suivante :"
+                f" {getattr(ctx.command, '__original_kwargs__').get('reason', None)}"
             )
             return
 
@@ -85,18 +86,6 @@ class ErrorHandler(commands.Cog):
         crash_log = "".join(
             traceback.format_exception(type(error), error, error.__traceback__)
         )
-
-        # data = aiohttp.FormData()
-        # data.add_field(name="data", value=crash_log)
-
-        # async with aiohttp.ClientSession() as ses:
-        #     async with ses.post("https://mystb.in/api/pastes", data=data) as resp:
-        #         print(resp.status)
-        #         print(await resp.read())
-        #         if resp.status != 200:
-        #             return
-        #         result = await resp.json()
-        #         url = f"https://mystb.in/{result['id']}"
 
         embed = discord.Embed()
         embed.add_field(
@@ -110,7 +99,6 @@ class ErrorHandler(commands.Cog):
         embed.add_field(name="author", value=ctx.author.mention, inline=False)
         embed.add_field(name="author id", value=ctx.author.id, inline=False)
         embed.add_field(name="message", value=ctx.message.content[:1024], inline=False)
-        # embed.add_field(name="crash log", value=url)
 
         file = discord.File(io.StringIO(crash_log), filename="crash_log.txt")
         try:
