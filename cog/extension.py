@@ -44,10 +44,10 @@ class Extension(commands.Cog):
             await ctx.reply(f"Successfully reloaded extension: `{extension}`")
 
         except commands.ExtensionNotLoaded:
-            ctx.reply(f"The extension `{extension}` was not loaded.")
+            await ctx.reply(f"The extension `{extension}` was not loaded.")
 
         except commands.ExtensionNotFound:
-            ctx.reply(f"The extension `{extension}` was not found.")
+            await ctx.reply(f"The extension `{extension}` was not found.")
 
         except Exception:
             file = discord.File(io.StringIO(traceback.format_exc()), filename="crash_log.txt")
@@ -74,7 +74,7 @@ class Extension(commands.Cog):
             except Exception:
                 msg.append(f"extension load fail: `{extension}`")
                 file = discord.File(io.StringIO(traceback.format_exc()), filename=f"{extension}.txt")
-                ctx.reply(file=file)
+                await ctx.reply(file=file)
 
         msg.append(f"\nloaded extensions: {len(self.bot.extensions)}/{len(ext)}")
         await ctx.reply("\n".join(msg))
