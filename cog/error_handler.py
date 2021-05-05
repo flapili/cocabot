@@ -11,6 +11,8 @@ from utils.my_bot import MyBot
 
 logger = logging.getLogger(__file__)
 
+print("tamère\n\n\n\n")
+
 
 class ErrorHandler(commands.Cog):
     """
@@ -24,6 +26,13 @@ class ErrorHandler(commands.Cog):
     async def on_command_error(
         self, ctx: commands.Context, error: Type[commands.errors.CommandError]
     ):
+
+        # reset cooldown
+        if ctx.guild and (
+            ctx.author.guild_permissions.administrator
+            or await self.bot.is_owner(ctx.author)
+        ):
+            ctx.command.reset_cooldown(ctx)
 
         if isinstance(error, commands.errors.CheckAnyFailure):
             error = error.errors[0]
@@ -42,14 +51,6 @@ class ErrorHandler(commands.Cog):
             return
 
         if isinstance(error, commands.errors.CommandOnCooldown):
-            if ctx.author.guild_permissions.administrator:
-                await ctx.reinvoke()
-                return
-
-            if await self.bot.is_owner(ctx.author):
-                await ctx.reinvoke()
-                return
-
             minutes, seconds = divmod(int(error.retry_after), 60)
             hours, minutes = divmod(minutes, 60)
             days, hours = divmod(hours, 24)
@@ -77,6 +78,11 @@ class ErrorHandler(commands.Cog):
 
         if isinstance(error, commands.errors.ConversionError):
             # TODO await ctx.send(f"impossible de convertir : {error.param.name}")
+            await ctx.send_help(ctx.command)
+            return
+
+        if isinstance(error, commands.errors.BadArgument):
+            await ctx.reply(error)
             await ctx.send_help(ctx.command)
             return
 
@@ -112,8 +118,13 @@ class ErrorHandler(commands.Cog):
         try:
             await ctx.send(embed=embed, file=file)
         except discord.Forbidden as e:
+            print(e)
             logger.error(e)
 
 
-def setup(bot):
+def setup(bot: MyBot):
     bot.add_cog(ErrorHandler(bot))
+
+
+def teardown(bot: MyBot):
+    bot.remove_cog(ErrorHandler.__name__)
