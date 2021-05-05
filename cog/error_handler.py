@@ -11,8 +11,6 @@ from utils.my_bot import MyBot
 
 logger = logging.getLogger(__file__)
 
-print("tamère\n\n\n\n")
-
 
 class ErrorHandler(commands.Cog):
     """
