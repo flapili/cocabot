@@ -68,6 +68,7 @@ class Link(commands.Cog):
                 )
                 await channel.send(message.content)
                 await channel.send(embed=embed)
+                break
 
 
 def setup(bot):
