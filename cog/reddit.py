@@ -7,7 +7,7 @@ import aiohttp
 
 
 # from utils import converter
-from utils.converter import reddit_enum
+from utils.converter import str_enum
 
 
 class Reddit(commands.Cog):
@@ -40,7 +40,7 @@ class Reddit(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.member)
     @commands.guild_only()
     async def reddit_random_subreddit(
-        self, ctx: commands.Context, subreddit: str, category: reddit_enum = "hot"
+        self, ctx: commands.Context, subreddit: str, category: str_enum(["hot", "new", "top", "rising"]) = "hot"
     ):
         """
         TODO

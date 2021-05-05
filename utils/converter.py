@@ -12,12 +12,13 @@ def dateparse(argument: str):
     raise ValueError(f"{argument} does not match with any format.")
 
 
-def reddit_enum(argument: str):
-    valid_categories: List[str] = ["hot", "new", "top", "rising"]
-    if argument in valid_categories:
-        return argument
+def str_enum(choices: List[str]):
+    def converter(argument: str):
+        if argument in choices:
+            return argument
 
-    formated_valid_categories: str = "\n".join(f"{i}: {cat}" for i, cat in valid_categories)
-    raise ValueError(
-        f"{argument} is not valid, valid categories are\n{formated_valid_categories}"
-    )
+        raise ValueError(
+            f" {argument} is not valid, valid choice are : {', '.join(f'`{c}`' for c in choices)}"
+        )
+
+    return converter
