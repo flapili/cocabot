@@ -13,7 +13,7 @@ from utils.my_bot import MyBot
 os.chdir(Path(__file__).parent)
 
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.DEBUG)
+root_logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter(
     fmt="%(asctime)s %(filename)s:%(lineno)d :: %(levelname)s :: %(name)s :: %(message)s"
