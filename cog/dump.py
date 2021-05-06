@@ -1,9 +1,12 @@
-# coding: utf-8
-import json
+# # coding: utf-8
 import time
 
 import discord
 from discord.ext import commands
+from sqlalchemy.dialects.postgresql import insert
+
+from utils.my_bot import MyBot
+from utils.db_models import Message
 
 
 class Dump(commands.Cog):
@@ -11,44 +14,22 @@ class Dump(commands.Cog):
     TODO
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot: MyBot):
         self.bot = bot
 
-    async def update_message(self, message):
-        if message.guild is None:
-            return
-
-        req = """CREATE TABLE IF NOT EXISTS message(
-                    id INT PRIMARY KEY NOT NULL,
-                    author_id INT NOT NULL,
-                    channel_id INT NOT NULL,
-                    guild_id INT NOT NULL,
-                    created_at INT NOT NULL,
-                    reactions TEXT)"""
-        await self.bot.db.execute(req)
-        parameters = {
-            "id": message.id,
-            "author_id": message.author.id,
-            "channel_id": message.channel.id,
-            "guild_id": message.guild.id,
-            "created_at": int(message.created_at.timestamp()),
-            "reactions": json.dumps(
-                [(str(r.emoji), r.count) for r in message.reactions]
-            ),
-        }
-        await self.bot.db.execute(
-            """REPLACE INTO message VALUES(:id, :author_id, :channel_id, :guild_id, :created_at, :reactions)""",
-            parameters,
-        )
-        await self.bot.db.commit()
-
     @commands.Cog.listener()
-    async def on_message(self, message):
-        await self.update_message(message)
+    async def on_message(self, message: discord.Message):
+        await Message.create(
+            id=message.id,
+            author_id=message.author.id,
+            channel_id=message.channel.id,
+            guild_id=message.guild.id,
+            created_at=message.created_at.replace(tzinfo=None),
+        )
 
     @commands.group(aliases=["d"])
     @commands.guild_only()
-    @commands.check_any(commands.is_owner())
+    @commands.is_owner()
     async def dump(self, ctx):
         """
         TODO
@@ -64,40 +45,26 @@ class Dump(commands.Cog):
         counter = 0
         start = time.time()
         async with ctx.channel.typing():
-            req = """CREATE TABLE IF NOT EXISTS message(
-                id INT PRIMARY KEY NOT NULL,
-                author_id INT NOT NULL,
-                channel_id INT NOT NULL,
-                guild_id INT NOT NULL,
-                created_at INT NOT NULL,
-                reactions TEXT)"""
-            await self.bot.db.execute(req)
             for channel in ctx.guild.text_channels:
                 try:
+                    # TODO bulk insert
                     async for m in channel.history(limit=None):
                         counter += 1
-                        parameters = {
-                            "id": m.id,
-                            "author_id": m.author.id,
-                            "channel_id": m.channel.id,
-                            "guild_id": m.guild.id,
-                            "created_at": int(m.created_at.timestamp()),
-                            "reactions": json.dumps(
-                                [(str(r.emoji), r.count) for r in m.reactions]
-                            ),
-                        }
-                        await self.bot.db.execute(
-                            "REPLACE INTO message VALUES(:id, :author_id, :channel_id, :guild_id, :created_at, :reactions)",  # noqa: E501
-                            parameters,
-                        )
+                        await insert(Message).values(
+                            id=m.id,
+                            author_id=m.author.id,
+                            channel_id=m.channel.id,
+                            guild_id=m.guild.id,
+                            created_at=m.created_at.replace(tzinfo=None),
+                        ).on_conflict_do_nothing(
+                            index_elements=[Message.id]
+                        ).gino.status()
                 except discord.Forbidden:
                     continue
-
-            await self.bot.db.commit()
-            await ctx.send(
+            await ctx.reply(
                 f"dump messages fini, {counter} messages en {int(time.time()-start)}s"
             )
 
 
-def setup(bot):
+def setup(bot: MyBot):
     bot.add_cog(Dump(bot))

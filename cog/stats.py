@@ -2,7 +2,7 @@
 import datetime
 import typing
 import io
-import json
+import functools
 
 import discord
 from discord.ext import commands
@@ -14,6 +14,7 @@ from matplotlib.dates import AutoDateLocator, DateFormatter
 from matplotlib.ticker import FuncFormatter
 
 from utils import converter
+from utils.db_models import Message
 
 
 class Stats(commands.Cog):
@@ -25,7 +26,6 @@ class Stats(commands.Cog):
         self.bot = bot
 
     @commands.group(aliases=["stats", "s"])
-    # @commands.has_permissions(manage_messages=True)
     @commands.guild_only()
     async def statistiques(self, ctx):
         """
@@ -46,116 +46,31 @@ class Stats(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
 
-    @statistiques.command(name="reactions", aliases=["r"])
-    @commands.cooldown(1, 60, commands.BucketType.member)
-    async def statistiques_reactions(
-        self,
-        ctx,
-        channel: typing.Optional[discord.TextChannel] = None,
-        after: converter.dateparse = datetime.datetime.min,
-        before: converter.dateparse = datetime.datetime.max,
-    ):
-        """
-        Retourne le message avec le plus de réactions.
-        - [channel] : le channel où rechercher le message (tous les channels de la guilde si aucun précisé).
-        - [after] : recherche parmi les messages qui ont été envoyés après cette date.
-        - [before] : cherche parmi les messages qui ont été envoyés avant cette date.
-        """
-
-        req = """
-            SELECT id, channel_id, reactions
-            FROM message
-            WHERE (created_at BETWEEN :after AND :before)
-            AND (guild_id == :guild_id)
-            AND (:channel_id == 0 OR :channel_id == channel_id)
-            AND (reactions != "[]")
-        """
-
-        parameters = {
-            "after": after,
-            "before": before,
-            "channel_id": channel.id if channel else 0,
-            "guild_id": ctx.guild.id,
-        }
-
-        messages = []
-        async with ctx.typing():
-            async with self.bot.db.execute(req, parameters) as cursor:
-                async for row in cursor:
-                    msg_id = row[0]
-                    channel_id = row[1]
-                    nb_reactions = sum([c for _, c in json.loads(row[2])])
-                    messages.append((msg_id, channel_id, nb_reactions))
-
-            messages.sort(key=lambda x: x[-1])
-            message = None
-            while message is None and messages:
-                msg_id, channel_id, _ = messages.pop()
-
-                c = discord.utils.get(ctx.guild.text_channels, id=channel_id)
-                if c:
-                    message = discord.utils.get(self.bot.cached_messages, id=msg_id)
-                    if not message:
-                        try:
-                            message = await c.fetch_message(msg_id)
-                        except discord.NotFound:
-                            pass
-
-            if message is None:
-                await ctx.send("Aucun message trouvé")
-                return
-
-            reactions_list = []
-            for r in message.reactions:
-                if isinstance(r.emoji, str):
-                    emoji_tag = f" {r.emoji} x{r.count} "
-                if isinstance(r.emoji, discord.Emoji):
-                    emoji_tag = f" <:_:{r.emoji.id}> x{r.count} "
-                if isinstance(r.emoji, discord.PartialEmoji):
-                    emoji_tag = f" {r.emoji.name} x{r.count} "
-                reactions_list.append(emoji_tag)
-
-            embed = discord.Embed()
-            embed.add_field(name="Auteur", value=message.author.mention, inline=False)
-            embed.add_field(
-                name="Message", value=f"[lien]({message.jump_url})", inline=False
-            )
-            embed.add_field(
-                name="Crée le",
-                value=message.created_at.strftime("%d/%m/%Y %H:%M"),
-                inline=False,
-            )
-            embed.add_field(name="Channel", value=message.channel.mention, inline=False)
-            embed.add_field(
-                name="Reactions", value="\n".join(reactions_list), inline=False
-            )
-            await ctx.send(embed=embed)
-
     @statistiques.command(name="messages", aliases=["m", "msg"])
     @commands.guild_only()
     @commands.cooldown(1, 60, commands.BucketType.member)
     async def statistiques_messages(
         self,
         ctx,
-        member: typing.Optional[discord.Member] = None,
-        channel: typing.Optional[discord.TextChannel] = None,
+        members: commands.Greedy[discord.Member] = None,
+        channels: commands.Greedy[discord.TextChannel] = None,
         cumul: typing.Optional[bool] = True,
-        after: converter.dateparse = datetime.datetime.min,
-        before: converter.dateparse = datetime.datetime.max,
+        after: typing.Optional[converter.dateparse] = None,
+        before: typing.Optional[converter.dateparse] = None,
     ):
         """
         Retourne les nombres de messages par jours.
-        - [member] : l'auteur des messages (tous les membres de la guilde si aucun précisé).
-        - [channel] : le channel où rechercher le message (tous les channels de la guilde si aucun précisé).
+        - [members] : les auteurs des messages (tous les membres de la guilde si aucun précisé).
+        - [channels] : les channels où rechercher les messages (tous les channels de la guilde si aucun de précisé).
         - [cumul] : true/false.
         - [after] : recherche parmi les messages qui ont été envoyés après cette date.
-        - [before] : cherche parmi les messages qui ont été envoyés avant cette date.
+        - [before] : recherche parmi les messages qui ont été envoyés avant cette date.
         """
 
-        def trace_graph():
-            x = numpy.array(sorted(messages.keys()))
+        def trace_graph(messages, cumul, before, after):
+            x = numpy.array(sorted(messages))
             y = numpy.array([messages[k] for k in x])
-            if cumul:
+            if cumul is True:
                 y = numpy.cumsum(y)
                 nb_msg = numpy.max(y)
             else:
@@ -185,44 +100,40 @@ class Stats(commands.Cog):
             buf.seek(0)
             return buf, nb_msg, moy_msg
 
-        req = """
-            SELECT created_at
-            FROM message
-            WHERE (created_at BETWEEN :after AND :before)
-            AND (guild_id == :guild_id)
-            AND (:channel_id == 0 OR :channel_id == channel_id)
-            AND (:author_id == 0 OR :author_id == author_id)
-        """
-
-        created_at = channel.created_at if channel else ctx.guild.created_at
-        after = after if after > created_at else created_at
-        before = (
-            before
-            if before < datetime.datetime.utcnow()
-            else datetime.datetime.utcnow()
-        )
-
-        parameters = {
-            "after": after.timestamp(),
-            "before": before.timestamp(),
-            "author_id": member.id if member else 0,
-            "channel_id": channel.id if channel else 0,
-            "guild_id": ctx.guild.id,
-        }
-
-        messages = {}
         async with ctx.typing():
-            async with self.bot.db.execute(req, parameters) as cursor:
-                async for row in cursor:
-                    key = datetime.datetime.utcfromtimestamp(row[0]).date()
-                    messages[key] = messages.get(key, 0) + 1
+            req = Message.query.where(Message.guild_id == ctx.guild.id)
+
+            if members:
+                req = req.where(Message.author_id.in_([m.id for m in members]))
+
+            if channels:
+                req = req.where(Message.channel_id.in_([c.id for c in channels]))
+
+            if before is not None:
+                req = req.where(Message.created_at.replace(tzinfo=None) <= before)
+
+            if after is not None:
+                req = req.where(Message.created_at.replace(tzinfo=None) >= after)
+
+            messages: dict[datetime.date, int] = {}
+            for m in await req.gino.all():
+                key = m.created_at.date()
+                messages[key] = messages.get(key, 0) + 1
 
             if messages:
                 image_bytes, nb_msg, moy_msg = await self.bot.loop.run_in_executor(
-                    None, trace_graph
+                    None,
+                    functools.partial(
+                        trace_graph,
+                        messages,
+                        cumul,
+                        before or datetime.datetime.utcnow(),
+                        after or ctx.guild.created_at.replace(tzinfo=None),
+                    ),
                 )
             else:
-                await ctx.send("Trop peu de donnée pour tracer un graphe ...")
+                await ctx.reply("Trop peu de donnée pour tracer un graphe ...")
+                return
 
             embed = discord.Embed()
 
@@ -235,14 +146,20 @@ class Stats(commands.Cog):
             )
 
             param = []
-            param.append(f"membre : {member.mention if member else 'aucun'}")
-            param.append(f"channel : {channel.mention if channel else 'aucun'}")
-            param.append(f"après : {after.isoformat()}")
-            param.append(f"avant : {before.isoformat()}")
+            param.append(f"membres : {len(members) if members is not None else 'tous'}")
+            param.append(
+                f"channels : {len(channels) if channels is not None else 'tous'}"
+            )
+            param.append(
+                f"après : {after.isoformat() if after is not None else ctx.guild.created_at.isoformat()}"
+            )
+            param.append(
+                f"après : {before.isoformat() if before is not None else datetime.datetime.utcnow().isoformat()}"
+            )
             embed.add_field(name="paramètres", value="\n".join(param), inline=False)
 
             embed.set_image(url="attachment://result.png")
-        await ctx.send(file=discord.File(image_bytes, "result.png"), embed=embed)
+        await ctx.reply(file=discord.File(image_bytes, "result.png"), embed=embed)
 
 
 def setup(bot):

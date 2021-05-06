@@ -1,13 +1,10 @@
 # coding: utf-8
 import random
+from typing import Literal
 
+import aiohttp
 import discord
 from discord.ext import commands
-import aiohttp
-
-
-# from utils import converter
-from utils.converter import str_enum
 
 
 class Reddit(commands.Cog):
@@ -40,7 +37,7 @@ class Reddit(commands.Cog):
     @commands.cooldown(1, 60, commands.BucketType.member)
     @commands.guild_only()
     async def reddit_random_subreddit(
-        self, ctx: commands.Context, subreddit: str, category: str_enum(["hot", "new", "top", "rising"]) = "hot"
+        self, ctx: commands.Context, subreddit: str, category: Literal["hot", "new", "top", "rising"] = "hot"
     ):
         """
         TODO

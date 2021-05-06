@@ -84,6 +84,11 @@ class ErrorHandler(commands.Cog):
             await ctx.send_help(ctx.command)
             return
 
+        if isinstance(error, commands.errors.BadLiteralArgument):
+            await ctx.reply(error)
+            await ctx.send_help(ctx.command)
+            return
+
         if isinstance(error, commands.errors.DisabledCommand):
             await ctx.reply(
                 f"la commande `{ctx.prefix}{ctx.command}` est désactivée pour la raison suivante :"
