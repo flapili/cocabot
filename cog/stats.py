@@ -76,7 +76,11 @@ class Stats(commands.Cog):
             else:
                 nb_msg = numpy.sum(y)
 
-            moy_msg = round(nb_msg / ((before - after).days + 1), 2)
+            moy_msg = round(
+                nb_msg
+                / ((before.replace(tzinfo=None) - after.replace(tzinfo=None)).days + 1),
+                2,
+            )
 
             fig = Figure(figsize=(20, 10))
             ax = fig.subplots()
