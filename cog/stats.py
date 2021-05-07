@@ -29,19 +29,7 @@ class Stats(commands.Cog):
     @commands.guild_only()
     async def statistiques(self, ctx):
         """
-        Permet d'avoir diverses statistiques sur :
-        - le nombre de messages d'un membre
-        | dans un channel
-        | en général
-        - le nombre de message
-        | en général
-        | dans un channel
-        - le membre le plus actif
-        | dans un channel
-        | en général
-        - le message ayant le plus de réactions
-        | dans un channel
-        | en général
+        Permet d'avoir diverses statistiques sur le Discord
         """
         if ctx.invoked_subcommand is None:
             await ctx.send_help(ctx.command)
