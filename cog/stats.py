@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.dates import AutoDateLocator, DateFormatter
 from matplotlib.ticker import FuncFormatter
 
+from utils import datetime_to_id
 from utils import converter
 from utils.db_models import Message
 
@@ -77,9 +78,7 @@ class Stats(commands.Cog):
             ax.set_xlim(left=numpy.min(x), right=numpy.max(x))
             ax.set_ylim(bottom=numpy.min(y), top=numpy.max(y))
 
-            ax.xaxis.set_major_locator(
-                AutoDateLocator(minticks=14, maxticks=14, interval_multiples=False)
-            )
+            ax.xaxis.set_major_locator(AutoDateLocator())
             ax.xaxis.set_major_formatter(DateFormatter("%d/%m/%y"))
             ax.xaxis.set_tick_params(rotation=30)
 
@@ -102,10 +101,10 @@ class Stats(commands.Cog):
                 req = req.where(Message.channel_id.in_([c.id for c in channels]))
 
             if before is not None:
-                req = req.where(Message.created_at.replace(tzinfo=None) <= before)
+                req = req.where(Message.id <= datetime_to_id(before, high=True))
 
             if after is not None:
-                req = req.where(Message.created_at.replace(tzinfo=None) >= after)
+                req = req.where(Message.id >= datetime_to_id(after))
 
             messages: dict[datetime.date, int] = {}
             for m in await req.gino.all():
