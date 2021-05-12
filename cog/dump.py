@@ -63,7 +63,7 @@ class Dump(commands.Cog):
                 display_name=message.author.display_name,
                 joined_at=message.author.joined_at.replace(tzinfo=None),
             ).on_conflict_do_update(
-                index_elements=[User.id, Guild.id],
+                index_elements=[Member.user_id, Member.guild_id],
                 set_=dict(
                     display_name=message.author.display_name,
                     joined_at=message.author.joined_at.replace(tzinfo=None),
@@ -168,7 +168,7 @@ class Dump(commands.Cog):
                         display_name=member.display_name,
                         joined_at=member.joined_at.replace(tzinfo=None),
                     ).on_conflict_do_update(
-                        index_elements=[User.id, Guild.id],
+                        index_elements=[Member.user_id, Member.guild_id],
                         set_=dict(
                             display_name=member.display_name,
                             joined_at=member.joined_at.replace(tzinfo=None),
@@ -261,7 +261,7 @@ class Dump(commands.Cog):
                                         display_name=message.author.display_name,
                                         joined_at=message.author.joined_at.replace(tzinfo=None),
                                     ).on_conflict_do_update(
-                                        index_elements=[User.id, Guild.id],
+                                        index_elements=[Member.user_id, Member.guild_id],
                                         set_=dict(
                                             display_name=message.author.display_name,
                                             joined_at=message.author.joined_at.replace(tzinfo=None),

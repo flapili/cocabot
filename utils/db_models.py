@@ -60,7 +60,7 @@ class Member(db.Model):
     display_name = db.Column(db.Text)
     joined_at = db.Column(db.DateTime, nullable=False)
 
-    db.UniqueConstraint("user_id", "guild_id")
+    _guild_user_uniq = db.UniqueConstraint("user_id", "guild_id")
 
 
 class Message(db.Model):
