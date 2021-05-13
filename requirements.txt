@@ -9,7 +9,7 @@ chardet==4.0.0
 click==7.1.2
 cycler==0.10.0
 dateparser==1.0.0
-discord.py==2.0.0a3101+g124c4a39
+discord.py==2.0.0a3103+g9b4e820b
 flake8==3.9.1
 gino==1.0.1
 idna==3.1

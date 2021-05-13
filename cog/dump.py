@@ -1,5 +1,7 @@
 # coding: utf-8
 import time
+import datetime
+from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -7,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from utils.db import db
 from utils.my_bot import MyBot
+from utils.converter import dateparse
 
 from utils.db_models import Guild, GuildTextChannel, User, Member, Message
 
@@ -178,12 +181,21 @@ class Dump(commands.Cog):
 
             await ctx.reply(f"dump guild fini, {counter} membres en {time.time()-start:.3f}s")
 
+    class DumpGuildFlags(commands.FlagConverter):
+        limit: Optional[int]
+        before: Optional[dateparse] = commands.Flag("before", default=lambda ctx: datetime.datetime.utcnow())
+        after: Optional[dateparse] = commands.Flag("after", default=lambda ctx: ctx.guild.created_at)
+
     @dump.command(name="messages", aliases=["msg"])
     @commands.guild_only()
     @commands.is_owner()
-    async def dump_messages(self, ctx: commands.Context):
+    async def dump_messages(self, ctx: commands.Context, flag: DumpGuildFlags):
         """
         Dump tous les membres de la guilde dans une base de donnée.
+
+        limit: Optional[int]
+        before: Optional[dateparse] = datetime.datetime.utcnow()
+        after: Optional[dateparse] = ctx.guild.created_at
         """
         counter = 0
         start = time.time()
@@ -237,7 +249,7 @@ class Dump(commands.Cog):
                                 nsfw=channel.is_nsfw(),
                             ),
                         ).gino.scalar()
-                        async for message in channel.history(limit=None):
+                        async for message in channel.history(limit=flag.limit, before=flag.before, after=flag.after):
                             # ensure the user exists on the database
                             if message.author.id not in user_cache:
                                 await insert(User).values(

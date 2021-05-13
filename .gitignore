@@ -132,3 +132,8 @@ dmypy.json
 .vscode
 ecosystem.config.js
 data.db
+.pm2
+.ssh
+.bash_history
+.vscode-server
+.vsliveshare
